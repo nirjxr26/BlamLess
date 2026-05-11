@@ -1,6 +1,9 @@
-name: "PR Build Replay"
-description: "Auto-retries failed workflows caused by GitHub infrastructure incidents"
-author: "nirjxr26"
+name: 'Blameless'
+description: 'Auto-retries failed workflows caused by GitHub infrastructure incidents'
+author: 'nirjxr26'
+branding:
+  icon: 'refresh-cw'
+  color: 'blue'
 
 inputs:
   github-token:
