@@ -1,4 +1,4 @@
-name: 'Blameless'
+name: 'BlameLess'
 description: 'Auto-retries failed workflows caused by GitHub infrastructure incidents'
 author: 'nirjxr26'
 branding:

@@ -30,7 +30,7 @@ export function buildComment(params: {
     retriedRunLine = `| **Retried run** | (Simulated) |`;
   }
 
-  return `<!-- pr-build-replay -->\n${dryRunBanner}## ⚡ PR Build Replay\n\nThis workflow run failed during an active **GitHub Actions infrastructure incident**.\n\n| | |\n|---|---|\n| **Incident** | [${incident.name}](${incident.shortlink}) |\n| **Impact** | ${incident.impact} |\n| **Started** | ${formatIncidentAge(incident.created_at)} |\n| **Original run** | [Run #${runNumber}](${originalRunUrl}) — ❌ Failed |\n${retriedRunLine}\n\n> This retry was triggered automatically. If the retry also fails, it is likely a code issue.\n\n---\n*Powered by [pr-build-replay](https://github.com/YOUR_USERNAME/pr-build-replay)*`;
+  return `<!-- pr-build-replay -->\n${dryRunBanner}## ⚡ PR Build Replay\n\nThis workflow run failed during an active **GitHub Actions infrastructure incident**.\n\n| | |\n|---|---|\n| **Incident** | [${incident.name}](${incident.shortlink}) |\n| **Impact** | ${incident.impact} |\n| **Started** | ${formatIncidentAge(incident.created_at)} |\n| **Original run** | [Run #${runNumber}](${originalRunUrl}) — ❌ Failed |\n${retriedRunLine}\n\n> This retry was triggered automatically. If the retry also fails, it is likely a code issue.\n\n---\n*Powered by [BlameLess](https://github.com/nirjxr26/BlameLess)*`;
 }
 
 export async function upsertComment(octokit: any, owner: string, repo: string, prNumber: number, body: string): Promise<void> {

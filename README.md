@@ -1,58 +1,68 @@
-# pr-build-replay
+# BlameLess
 
-Auto-retries failed workflows during GitHub infrastructure incidents.
+Stop manual retries. Detect GitHub infrastructure failures automatically.
+
+GitHub Actions can be flaky. Infrastructure incidents, runner outages, and network blips often cause workflows to fail through no fault of your code. BlameLess automatically detects if a workflow failure was caused by a documented GitHub incident and triggers an immediate retry—keeping your PRs moving without human intervention.
+
+## How it Works
+
+1. Failure Detection: Runs only when a previous step in your workflow fails.
+2. Incident Audit: Queries the official GitHub Status API for active incidents affecting Actions.
+3. Smart Replay: If an incident is active, it triggers an automatic re-run of the failed jobs.
+4. PR Communication: Posts a professional status report on your Pull Request with links to the incident and the new run.
+5. Safety First: Respects a max-retries limit to prevent infinite loops on broken code.
 
 ## Usage
 
-Add this as the LAST step in any workflow you want protected.
-It must run with `if: failure()` so it only triggers on failed runs.
+Add BlameLess as the last step in any workflow you want to protect.
 
 ```yaml
 name: CI
-
-on:
-  pull_request:
+on: [pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write       # To trigger re-runs
+      issues: write        # To post PR comments
+      pull-requests: write # To read PR data
+    
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci
+      - run: npm install
       - run: npm test
 
-      - name: PR Build Replay
+      - name: BlameLess Retry
         if: failure()
-        uses: YOUR_USERNAME/pr-build-replay@v1
+        uses: nirjxr26/BlameLess@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          max-retries: '1'
-          post-comment: 'true'
 ```
 
-### Required permissions
+## Configuration
 
-The workflow needs these permissions:
-```yaml
-permissions:
-  actions: write      # to re-run workflows
-  issues: write       # to post PR comments
-  pull-requests: write
-```
+| Input | Description | Default |
+|---|---|---|
+| github-token | GitHub token with actions:write and issues:write | ${{ github.token }} |
+| max-retries | Max number of auto-retries allowed per PR | 1 |
+| post-comment | Post a comment on the PR explaining the retry | true |
+| dry-run | Log logic without actually triggering a retry | false |
 
-### Outputs
+## Outputs
 
-```yaml
-- uses: YOUR_USERNAME/pr-build-replay@v1
-  id: replay
-  if: failure()
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+| Output | Description |
+|---|---|
+| was-incident | true if a GitHub Actions incident was detected |
+| retried | true if the workflow was actually retried |
+| incident-name | The name of the detected GitHub incident |
+| new-run-id | The ID of the newly triggered workflow run |
 
-- name: Log result
-  if: always()
-  run: |
-    echo "Was incident: ${{ steps.replay.outputs.was-incident }}"
-    echo "Retried: ${{ steps.replay.outputs.retried }}"
-    echo "New run: ${{ steps.replay.outputs.new-run-id }}"
-```
+---
+
+### Why BlameLess?
+* Reduce Developer Friction: No more "did I break it or is GitHub down?"
+* Faster Velocity: Automatic recovery from transient infrastructure blips.
+* Professional Reporting: Keep your team informed with clear PR status updates.
+
+Built for the DevOps community.
