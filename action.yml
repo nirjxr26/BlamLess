@@ -1,0 +1,38 @@
+name: 'BlamLess'
+description: 'Auto-retries failed workflows caused by GitHub infrastructure incidents'
+author: 'nirjxr26'
+branding:
+  icon: 'refresh-cw'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: "GitHub token with actions:write and issues:write permissions"
+    required: true
+    default: "${{ github.token }}"
+  max-retries:
+    description: "Maximum number of auto-retries allowed per PR (prevents infinite loops)"
+    required: false
+    default: "1"
+  post-comment:
+    description: "Post a comment on the PR explaining the retry"
+    required: false
+    default: "true"
+  dry-run:
+    description: "Log what would happen without actually retrying"
+    required: false
+    default: "false"
+
+outputs:
+  was-incident:
+    description: "true if a GitHub Actions incident was detected"
+  retried:
+    description: "true if the workflow was retried"
+  incident-name:
+    description: "Name of the detected incident, if any"
+  new-run-id:
+    description: "The run ID of the new retried workflow run"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
