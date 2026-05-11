@@ -1,4 +1,6 @@
-# BlamLess
+<div align="center">
+  <h1>BlamLess</h1>
+</div>
 
 Stop manual retries. Detect GitHub infrastructure failures automatically.
 
@@ -17,22 +19,33 @@ GitHub Actions can be flaky. Infrastructure incidents, runner outages, and netwo
 Add BlameLess as the last step in any workflow you want to protect.
 
 ```yaml
+# example workflow snippet code
 name: CI
-on: [pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      actions: write       # To trigger re-runs
-      issues: write        # To post PR comments
-      pull-requests: write # To read PR data
-    
+      actions: write
+      issues: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
-      - run: npm install
-      - run: npm test
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # --- Add BlamLess at the end of your any workflow ---
       - name: BlameLess Retry
         if: failure()
         uses: nirjxr26/BlameLess@v1
