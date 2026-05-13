@@ -21,3 +21,10 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git tag -fa $MAJOR -m "Update $MAJOR to $TAG"
           git push origin $MAJOR --force
+
+      - name: blamless retry
+        if: failure()
+        uses: nirjxr26/blamless@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      

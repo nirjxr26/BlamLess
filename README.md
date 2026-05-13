@@ -1,4 +1,6 @@
-# BlamLess
+<div align="center">
+  <h1>BlamLess</h1>
+</div>
 
 Stop manual retries. Detect GitHub infrastructure failures automatically.
 
@@ -17,21 +19,29 @@ GitHub Actions can be flaky. Infrastructure incidents, runner outages, and netwo
 Add BlamLess as the last step in any workflow you want to protect.
 
 ```yaml
+# example workflow snippet code
 name: CI
-on: [pull_request]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      actions: write       # To trigger re-runs
-      issues: write        # To post PR comments
-      pull-requests: write # To read PR data
-    
+      actions: write
+      issues: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm test
 
-      - name: BlamLess Retry
+      - name: BlameLess Retry
         if: failure()
         uses: nirjxr26/BlamLess@v1
         with:
@@ -58,72 +68,9 @@ jobs:
 
 ---
 
-## Example output
-
-These are the messages and outputs you should expect to see in GitHub Actions logs.
-
-### 1. No active incident
-
-When GitHub is healthy, BlamLess stops and clearly says the failure is most likely your code:
-
-```text
-No active GitHub Actions incident detected. Failure is likely a code issue.
-```
-
-Outputs:
-
-| Output | Value |
-|---|---|
-| was-incident | false |
-| retried | false |
-| incident-name |  |
-| incident-severity | none |
-| incident-shortlink |  |
-| incidents-found | false |
-| incidents-summary |  |
-
-### 2. Active incident detected
-
-When GitHub Actions is affected, BlamLess classifies it, retries the run, and exposes the details:
-
-```text
-GitHub Actions incident detected: Actions degraded performance — severity=major
-Retry triggered successfully.
-```
-
-Outputs:
-
-| Output | Value |
-|---|---|
-| was-incident | true |
-| retried | true |
-| incident-name | Actions degraded performance |
-| incident-severity | major |
-| incident-shortlink | https://www.githubstatus.com/incidents/abcdef |
-| incident-started-at | 2026-05-13T12:34:56Z |
-| new-run-id | 87654321 |
-
-### 3. PR comment example
-
-If `post-comment: true`, the action posts a short comment on the PR so anyone can tell what happened at a glance:
-
-```markdown
-<!-- pr-build-replay retry-count=1 -->
-## PR Build Replay
-
-> Status: incident detected
-
-| Field | Value |
-|---|---|
-| Workflow | CI |
-| Retry attempt | 1 |
-| Incident | [Actions degraded performance](https://www.githubstatus.com/incidents/abcdef) |
-| Impact | major |
-| Started | 5 minutes ago |
-| Original run | [Run #42](https://github.com/owner/repo/actions/runs/12345678) |
-| Retried run | [View retry](https://github.com/owner/repo/actions/runs/87654321) |
-```
-
+<<<<<<< HEAD
+### Why BlameLess?
+=======
 ### Why BlamLess?
 * Reduce Developer Friction: No more "did I break it or is GitHub down?"
 * Faster Velocity: Automatic recovery from transient infrastructure blips.
