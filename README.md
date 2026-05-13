@@ -68,10 +68,8 @@ jobs:
 
 ---
 
-<<<<<<< HEAD
+
 ### Why BlameLess?
-=======
-### Why BlamLess?
 * Reduce Developer Friction: No more "did I break it or is GitHub down?"
 * Faster Velocity: Automatic recovery from transient infrastructure blips.
 * Professional Reporting: Keep your team informed with clear PR status updates.
