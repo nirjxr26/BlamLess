@@ -28,18 +28,32 @@ async function run(): Promise<void> {
     }
 
     const incidents = await fetchUnresolvedIncidents();
-    const { active, incident } = isActionsIncidentActive(incidents);
+    const { active, incident, severity } = isActionsIncidentActive(incidents);
 
+    // Expose structured outputs so workflow consumers can easily classify results
+    core.setOutput('incidents-found', String(incidents.length > 0));
     if (!active || !incident) {
       core.info("No active GitHub Actions incident detected. Failure is likely a code issue.");
       core.setOutput("was-incident", "false");
-      core.setOutput("retried", "false");
+      core.setOutput('incident-name', '');
+      core.setOutput('incident-severity', 'none');
+      core.setOutput('incident-shortlink', '');
+      core.setOutput('retried', "false");
+      if (incidents.length > 0) {
+        const summary = incidents.map(i => `${i.name} (${i.impact})`).join(' | ');
+        core.setOutput('incidents-summary', summary);
+      } else {
+        core.setOutput('incidents-summary', '');
+      }
       process.exit(0);
     }
 
-    core.warning(`GitHub Actions incident detected: ${incident.name}`);
+    core.warning(`GitHub Actions incident detected: ${incident.name} — severity=${severity}`);
     core.setOutput("was-incident", "true");
     core.setOutput("incident-name", incident.name);
+    core.setOutput('incident-severity', severity ?? 'unknown');
+    core.setOutput('incident-shortlink', incident.shortlink ?? '');
+    core.setOutput('incident-started-at', incident.created_at ?? '');
 
     const octokit = github.getOctokit(githubToken);
 
@@ -49,6 +63,7 @@ async function run(): Promise<void> {
       core.setOutput("retried", "false");
       process.exit(0);
     }
+    const retryCount = previousRetries + 1;
 
     if (dryRun) {
       core.info(`Would retry run ${runId} due to incident: ${incident.name}`);
@@ -60,7 +75,8 @@ async function run(): Promise<void> {
         incident,
         workflowName,
         runNumber,
-        dryRun: true
+        dryRun: true,
+        retryCount
       });
       if (postComment) {
         core.info(`Would post comment:\n${commentBody}`);
@@ -86,7 +102,8 @@ async function run(): Promise<void> {
         incident,
         workflowName,
         runNumber,
-        dryRun: false
+        dryRun: false,
+        retryCount
       });
       await upsertComment(octokit, owner, repo, prNumber, commentBody);
     }

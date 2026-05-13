@@ -12,8 +12,9 @@ export function buildComment(params: {
   workflowName: string;
   runNumber: number;
   dryRun: boolean;
+  retryCount: number;
 }): string {
-  const { owner, repo, originalRunId, newRunId, incident, runNumber, dryRun } = params;
+  const { owner, repo, originalRunId, newRunId, incident, workflowName, runNumber, dryRun, retryCount } = params;
   
   const originalRunUrl = getRunUrl(owner, repo, originalRunId);
   const newRunUrl = newRunId ? getRunUrl(owner, repo, newRunId) : '';
@@ -23,14 +24,12 @@ export function buildComment(params: {
     dryRunBanner = `> 🧪 **Dry run mode** — no retry was triggered, this is a simulation.\n\n`;
   }
 
-  let retriedRunLine = `| **Retried run** | [View retry](${newRunUrl}) — ⏳ Running |`;
-  if (newRunId === null && !dryRun) {
-    retriedRunLine = `> ⚠️ Retry was triggered but the new run ID could not be determined. Check the Actions tab.`;
-  } else if (newRunId === null && dryRun) {
-    retriedRunLine = `| **Retried run** | (Simulated) |`;
-  }
+  let statusLine = `**Status**: INCIDENT DETECTED — ${incident.impact.toUpperCase()}`;
+  if (dryRun) statusLine += ' (dry run)';
 
-  return `<!-- pr-build-replay -->\n${dryRunBanner}## ⚡ PR Build Replay\n\nThis workflow run failed during an active **GitHub Actions infrastructure incident**.\n\n| | |\n|---|---|\n| **Incident** | [${incident.name}](${incident.shortlink}) |\n| **Impact** | ${incident.impact} |\n| **Started** | ${formatIncidentAge(incident.created_at)} |\n| **Original run** | [Run #${runNumber}](${originalRunUrl}) — ❌ Failed |\n${retriedRunLine}\n\n> This retry was triggered automatically. If the retry also fails, it is likely a code issue.\n\n---\n*Powered by [BlameLess](https://github.com/nirjxr26/BlameLess)*`;
+  let retriedRunLine = `| **Retried run** | ${newRunId ? `[View retry](${newRunUrl}) — ⏳ Running` : (dryRun ? '(Simulated)' : '⚠️ Retry triggered, run ID unknown')} |`;
+
+  return `<!-- pr-build-replay retry-count=${retryCount} -->\n${dryRunBanner}## ⚡ PR Build Replay\n\n> ${statusLine}\n\n| | |\n|---|---|\n| **Workflow** | ${workflowName} |\n| **Retry attempt** | ${retryCount} |\n| **Incident** | [${incident.name}](${incident.shortlink}) |\n| **Impact / Severity** | ${incident.impact} |\n| **Started** | ${formatIncidentAge(incident.created_at)} |\n| **Original run** | [Run #${runNumber}](${originalRunUrl}) — ❌ Failed |\n${retriedRunLine}\n\n> This retry was triggered automatically. If the retry also fails, it is likely a code issue.\n\n---\n*Powered by [BlameLess](https://github.com/nirjxr26/BlameLess)*`;
 }
 
 export async function upsertComment(octokit: any, owner: string, repo: string, prNumber: number, body: string): Promise<void> {

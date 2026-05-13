@@ -26,6 +26,16 @@ inputs:
 outputs:
   was-incident:
     description: "true if a GitHub Actions incident was detected"
+  incident-severity:
+    description: "Severity/impact of the detected incident (critical/major/minor)"
+  incident-shortlink:
+    description: "Shortlink URL to the incident on githubstatus.com"
+  incident-started-at:
+    description: "Timestamp when the incident was created"
+  incidents-found:
+    description: "true if any unresolved incidents were found (may not affect Actions)"
+  incidents-summary:
+    description: "Concise summary of unresolved incidents when no Actions incident is active"
   retried:
     description: "true if the workflow was retried"
   incident-name:

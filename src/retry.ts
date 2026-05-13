@@ -10,8 +10,12 @@ export async function getPreviousRetryCount(octokit: any, owner: string, repo: s
 
     let count = 0;
     for (const comment of comments) {
-      if (comment.body?.includes('<!-- pr-build-replay -->')) {
-        count++;
+      const body = comment.body || '';
+      const match = body.match(/<!-- pr-build-replay(?:\s+retry-count=(\d+))? -->/);
+      if (match?.[1]) {
+        count = Math.max(count, Number(match[1]));
+      } else if (body.includes('<!-- pr-build-replay -->')) {
+        count = Math.max(count, 1);
       }
     }
     return count;
@@ -22,7 +26,7 @@ export async function getPreviousRetryCount(octokit: any, owner: string, repo: s
 }
 
 export async function reRunWorkflow(octokit: any, owner: string, repo: string, runId: number, sha: string): Promise<{ newRunId: number | null }> {
-  const now = new Date().toISOString();
+  const rerunStartedAt = Date.now();
   try {
     await octokit.rest.actions.reRunWorkflow({
       owner,
@@ -42,26 +46,32 @@ export async function reRunWorkflow(octokit: any, owner: string, repo: string, r
     return { newRunId: null };
   }
 
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  try {
-    const { data } = await octokit.rest.actions.listWorkflowRunsForRepo({
-      owner,
-      repo,
-      head_sha: sha,
-    });
+    try {
+      const { data } = await octokit.rest.actions.listWorkflowRunsForRepo({
+        owner,
+        repo,
+        head_sha: sha,
+      });
 
-    const runs = data.workflow_runs.filter((run: any) => run.created_at >= now || run.updated_at >= now);
-    if (runs.length > 0) {
-      return { newRunId: runs[0].id };
+      const runs = data.workflow_runs.filter((run: any) => {
+        const createdAt = new Date(run.created_at).getTime();
+        const updatedAt = new Date(run.updated_at).getTime();
+        return createdAt >= rerunStartedAt || updatedAt >= rerunStartedAt;
+      });
+
+      if (runs.length > 0) {
+        return { newRunId: runs[0].id };
+      }
+    } catch (error) {
+      core.warning(`Failed to fetch new run ID (attempt ${attempt + 1}): ${error instanceof Error ? error.message : String(error)}`);
     }
-    
-    const firstRun = data.workflow_runs[0];
-    return { newRunId: firstRun ? firstRun.id : null };
-  } catch (error) {
-    core.warning(`Failed to fetch new run ID: ${error instanceof Error ? error.message : String(error)}`);
-    return { newRunId: null };
   }
+
+  core.warning('Could not confirm the new run ID yet. The workflow was retried, but GitHub has not exposed the new run in the API response.');
+  return { newRunId: null };
 }
 
 export function getRunUrl(owner: string, repo: string, runId: number): string {

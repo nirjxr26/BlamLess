@@ -16,7 +16,7 @@ export async function fetchUnresolvedIncidents(): Promise<Incident[]> {
   }
 }
 
-export function isActionsIncidentActive(incidents: Incident[]): { active: boolean; incident: Incident | null } {
+export function isActionsIncidentActive(incidents: Incident[]): { active: boolean; incident: Incident | null; severity: string | null } {
   const validImpacts = ['minor', 'major', 'critical'];
 
   for (const incident of incidents) {
@@ -25,12 +25,13 @@ export function isActionsIncidentActive(incidents: Incident[]): { active: boolea
         (c) => c.name.includes('Actions') && c.status !== 'operational'
       );
       if (hasActionsComponent) {
-        return { active: true, incident };
+        const severity = incident.impact || 'unknown';
+        return { active: true, incident, severity };
       }
     }
   }
 
-  return { active: false, incident: null };
+  return { active: false, incident: null, severity: null };
 }
 
 export function formatIncidentAge(createdAt: string): string {
