@@ -1,25 +1,28 @@
 <div align="center">
-  <h1>BlamLess</h1>
+
+# BlamLess
+
 </div>
 
 Stop manual retries. Detect GitHub infrastructure failures automatically.
 
-GitHub Actions can be flaky. Infrastructure incidents, runner outages, and network blips often cause workflows to fail through no fault of your code. BlamLess automatically detects if a workflow failure was caused by a documented GitHub incident and triggers an immediate retry—keeping your PRs moving without human intervention.
+---
 
-## How it Works
+GitHub Actions can be flaky. Infrastructure incidents, runner outages, and network blips fail workflows through no fault of your code. BlameLess checks whether a failure lines up with a live GitHub incident and retries automatically — no human has to decide "is it me or is it GitHub."
 
-1. Failure Detection: Runs only when a previous step in your workflow fails.
-2. Incident Audit: Queries the official GitHub Status API for active incidents affecting Actions.
-3. Smart Replay: If an incident is active, it triggers an automatic re-run of the failed jobs.
-4. PR Communication: Posts a professional status report on your Pull Request with links to the incident and the new run.
-5. Safety First: Respects a max-retries limit to prevent infinite loops on broken code.
+## How it works
+
+1. **Failure detection** — runs only when a previous step fails.
+2. **Incident audit** — queries the GitHub Status API for active incidents affecting Actions.
+3. **Smart replay** — if an incident is active, re-runs the failed jobs.
+4. **PR communication** — posts a status comment with links to the incident and the new run.
+5. **Safety limit** — respects `max-retries` so broken code doesn't loop forever.
 
 ## Usage
 
-Add BlamLess as the last step in any workflow you want to protect.
+Add BlameLess as the last step of any workflow you want protected:
 
 ```yaml
-# example workflow snippet code
 name: CI
 
 on:
@@ -43,7 +46,7 @@ jobs:
 
       - name: BlameLess Retry
         if: failure()
-        uses: nirjxr26/BlamLess@v1
+        uses: nirjxr26/BlameLess@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -52,27 +55,28 @@ jobs:
 
 | Input | Description | Default |
 |---|---|---|
-| github-token | GitHub token with actions:write and issues:write | ${{ github.token }} |
-| max-retries | Max number of auto-retries allowed per PR | 1 |
-| post-comment | Post a comment on the PR explaining the retry | true |
-| dry-run | Log logic without actually triggering a retry | false |
+| `github-token` | Token with `actions:write` and `issues:write` | `${{ github.token }}` |
+| `max-retries` | Max auto-retries allowed per PR | `1` |
+| `post-comment` | Post a PR comment explaining the retry | `true` |
+| `dry-run` | Log the decision without triggering a retry | `false` |
 
 ## Outputs
 
 | Output | Description |
 |---|---|
-| was-incident | true if a GitHub Actions incident was detected |
-| retried | true if the workflow was actually retried |
-| incident-name | The name of the detected GitHub incident |
-| new-run-id | The ID of the newly triggered workflow run |
+| `was-incident` | `true` if a GitHub Actions incident was detected |
+| `incident-name` | Name of the detected incident |
+| `incident-severity` | `critical` / `major` / `minor` |
+| `incident-shortlink` | Link to the incident on githubstatus.com |
+| `incident-started-at` | Timestamp the incident began |
+| `incidents-found` | `true` if any unresolved incidents exist (may not affect Actions) |
+| `incidents-summary` | Summary of unresolved incidents when none affect Actions |
+| `retried` | `true` if the workflow was actually retried |
+| `new-run-id` | ID of the newly triggered run |
 
----
 
-<<<<<<< HEAD
-### Why BlameLess?
-=======
-### Why BlamLess?
-* Reduce Developer Friction: No more "did I break it or is GitHub down?"
-* Faster Velocity: Automatic recovery from transient infrastructure blips.
-* Professional Reporting: Keep your team informed with clear PR status updates.
- 
+## Why BlameLess
+
+- No more guessing whether it's your code or GitHub's infrastructure.
+- Workflows recover from transient outages without a human watching CI.
+- PRs stay informed with a clear, linked status comment instead of a silent re-run.

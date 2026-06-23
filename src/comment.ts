@@ -40,7 +40,7 @@ export async function upsertComment(octokit: any, owner: string, repo: string, p
       issue_number: prNumber,
     });
 
-    const existingComment = comments.find((c: any) => c.body?.includes('<!-- pr-build-replay -->'));
+    const existingComment = comments.find((c: any) => c.body?.includes('<!-- pr-build-replay'));
 
     if (existingComment) {
       await octokit.rest.issues.updateComment({
