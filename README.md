@@ -74,8 +74,7 @@ jobs:
 | `retried` | `true` if the workflow was actually retried |
 | `new-run-id` | ID of the newly triggered run |
 
-
-## Why BlameLess
+## Why BlamLess?
 
 - No more guessing whether it's your code or GitHub's infrastructure.
 - Workflows recover from transient outages without a human watching CI.
